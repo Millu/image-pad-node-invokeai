@@ -1,5 +1,6 @@
 import os
-from PIL import Image
+
+
 from invokeai.app.invocations.baseinvocation import (
     BaseInvocation,
     Input,
@@ -8,12 +9,21 @@ from invokeai.app.invocations.baseinvocation import (
     InputField,
     WithMetadata,
     WithWorkflow,
+
 )
-from invokeai.app.invocations.primitives import ImageField, ImageOutput
+
+from invokeai.app.invocations.primitives import (
+    ImageField,
+    ImageOutput,
+    ColorField)
+
 from invokeai.app.services.image_records.image_records_common import (
     ImageCategory,
     ResourceOrigin,
 )
+
+from PIL import Image
+
 
 @invocation(
     "Pad_Image",
@@ -22,6 +32,7 @@ from invokeai.app.services.image_records.image_records_common import (
     category="image",
     version="1.0.0",
     use_cache=False,
+    
 )
 class PadImageInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     """Pad an Image"""
@@ -35,16 +46,15 @@ class PadImageInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     y_offset: int = InputField(
         default=0, description="Y offset for padding"
     )
-    padding_color: tuple = InputField(
-        default=(0, 0, 0), description="Padding color as RGB tuple"
+    padding_color: ColorField = InputField(
+        default=ColorField(r=0, g=0, b=0, a=255), description="Padding color as RGB value"
     )
 
     def pad_image(self, input_image: Image.Image, x_offset: int, y_offset: int, padding_color: tuple) -> Image.Image:
         width, height = input_image.size
         new_width = width + 2 * x_offset
         new_height = height + 2 * y_offset
-
-        padded_image = Image.new("RGB", (new_width, new_height), padding_color)
+        padded_image = Image.new("RGBA", (new_width, new_height), (padding_color.r,padding_color.g,padding_color.b,padding_color.a,))
         padded_image.paste(input_image, (x_offset, y_offset))
 
         return padded_image
